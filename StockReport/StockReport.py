@@ -22,7 +22,7 @@ class StockReport:
         super().__init__()
         self.token = '5e67f5dc948cd6e6b616ed0265e55f0b8db58c0bfb951272e7e2e50f'
         self.headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"}
-        self.startdate = '2013-01-01'
+        self.startdate = '2014-01-01'
         self.enddate = time.strftime("%Y%m%d", time.localtime())
 
         
@@ -59,7 +59,7 @@ class StockReport:
         #dicdata：字典的数据。
         #RANGE：截取显示的字典的长度。
         #heng=0，代表条状图的柱子是竖直向上的。heng=1，代表柱子是横向的。考虑到文字是从左到右的，让柱子横向排列更容易观察坐标轴。
-        by_value = sorted(dicdata.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
+        #by_value = sorted(dicdata.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
         x = []
         y = []
         ct = time.time()
@@ -70,7 +70,7 @@ class StockReport:
         #解决中文显示问题
         plt.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
         plt.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
-        for d in by_value:
+        for d in dicdata:
             x.append(d[0])
             y.append(d[1])
         if heng == 0:
@@ -97,7 +97,10 @@ class StockReport:
         for s in stock_list:
             dict[s] = dict.get(s, 0) + 1
 
-        self.draw_report_from_dict(dict,20)
+        dicdata = sorted(dict.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
+        self.draw_report_from_dict(dicdata,20)
+        print(dicdata)
+        return dicdata
 
     def get_daily_data(self,stock_code):
         ts.set_token(self.token)
@@ -144,10 +147,19 @@ class StockReport:
         df.set_index(['Date'], inplace=True)
         return df
 
+    def parse_stock_code(self,stock_str):
+        line = stock_str[stock_str.index('(')+1:stock_str.index(')')]
+        if line[0] == '6':
+            stock_code = line+'.SH'      
+            pass
+        else:
+            stock_code = line+'.SZ'
+            pass
+        return stock_code
 
     def draw_k_line(self,stock_code):
         # 导入数据
-        symbol = stock_code
+        symbol = self.parse_stock_code(stock_code)
         period = 5000
         #df = self.import_csv(symbol)[-period:]
         df = self.import_ts_data(symbol)[-period:]
@@ -165,7 +177,7 @@ class StockReport:
             type='candle', 
             mav=(7, 30, 60), 
             volume=True, 
-            title='\nA_stock %s candle_line' % (symbol),    
+            title='\nA_stock %s candle_line' % (stock_code),    
             ylabel='OHLC Candles', 
             ylabel_lower='Shares\nTraded Volume', 
             figratio=(15, 10), 
@@ -203,7 +215,8 @@ class StockReport:
             color=['dodgerblue', 'deeppink', 
             'navy', 'teal', 'maroon', 'darkorange', 
             'indigo'])
-            
+        mpl.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
+        mpl.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
         # 设置线宽
         mpl.rcParams['lines.linewidth'] = .5
 
@@ -219,14 +232,17 @@ class StockReport:
         mpf.plot(df, 
             **kwargs, 
             style=s, 
-            show_nontrading=False)
-                
-        plt.show()
+            show_nontrading=False)       
+        #plt.show()
 
 
 stockReport = StockReport()
-stockReport.show_stock_report()
 stock_code = '600104.SH'
+dicdata = stockReport.show_stock_report()
+
+stock_tup = dicdata[0]
+stock_code = stock_tup[0]
 stockReport.draw_k_line(stock_code)
+
 
 
