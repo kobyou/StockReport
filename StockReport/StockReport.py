@@ -18,21 +18,20 @@ import time
 
 
 class StockReport:
-    def __init__(self):
+    def __init__(self,range=10):
         super().__init__()
         self.token = '5e67f5dc948cd6e6b616ed0265e55f0b8db58c0bfb951272e7e2e50f'
         self.headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"}
         # self.startdate = '2018-01-01'
         # self.enddate = time.strftime("%Y%m%d", time.localtime())
-
-        #180 days。
+        self.stockRange = range
+        #300 days。
         now=datetime.datetime.now()
-        delta=datetime.timedelta(days=180)
-        n_days=now-delta
-        
+        delta=datetime.timedelta(days=360)
+        n_days=now-delta      
         self.enddate = now.strftime('%Y%m%d')
         self.startdate = n_days.strftime('%Y%m%d')
-        print (self.startdate)
+        #print (self.startdate)
         
     def get_page(self,url):
         try:
@@ -73,7 +72,7 @@ class StockReport:
         ct = time.time()
         local_time = time.localtime(ct)
         t = time.strftime("%Y-%m-%d", local_time)
-        fig = plt.figure(figsize=(11,6))
+        fig = plt.figure(figsize=(10,5))
         fig.suptitle('Stock Report(%s)'%t)
         #解决中文显示问题
         #plt.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
@@ -106,8 +105,8 @@ class StockReport:
             dict[s] = dict.get(s, 0) + 1
 
         dicdata = sorted(dict.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
-        self.draw_report_from_dict(dicdata,10)
-        print(dicdata)
+        self.draw_report_from_dict(dicdata,self.stockRange)
+        #print(dicdata)
         return dicdata
 
     def get_daily_data(self,stock_code):
@@ -137,7 +136,7 @@ class StockReport:
         df['Date'] = pd.to_datetime(df['Date'])
         # 将日期列作为行索引
         df.set_index(['Date'], inplace=True)
-        print(df)
+        #print(df)
         return df
     
     def import_csv(self,stock_code):
@@ -248,28 +247,19 @@ class StockReport:
         stock_code = '上汽集团(600104)'
         dicdata = self.show_stock_report()
 
-        for i in range(0,10):
+        for i in range(0,self.stockRange):
             #stock_tup = dicdata[0]
             stock_code = dicdata[i][0]
             self.draw_k_line(stock_code)
 
-        plt.rcParams['font.sans-serif'] = ['SimKai', 'KaiTi']
+        plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
         plt.show()
-       
-stockReport = StockReport() 
-stockReport.run()
 
-# stockReport = StockReport()
-# stock_code = '上汽集团(600104)'
-# dicdata = stockReport.show_stock_report()
+if __name__ == "__main__":
+    pass
+    stockReport = StockReport(10) 
+    stockReport.run()
 
-# for i in range(0,10):
-#     #stock_tup = dicdata[0]
-#     stock_code = dicdata[i][0]
-#     stockReport.draw_k_line(stock_code)
-
-# plt.rcParams['font.sans-serif'] = ['SimKai', 'KaiTi']
-# plt.show()
 
 
 
