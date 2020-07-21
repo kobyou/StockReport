@@ -14,7 +14,6 @@ import matplotlib as mpl# 用于设置曲线参数
 from cycler import cycler# 用于定制线条颜色
 import pandas as pd# 导入DataFrame数据
 import tushare as ts
-import time
 
 
 class StockReport:
@@ -235,7 +234,8 @@ class StockReport:
         #     style=s, 
         #     show_nontrading=False,
         #     savefig='A_stock-%s %s_candle_line'
-        #     % (symbol, period) + '.jpg')
+        #     % (symbol, period) + '.jpg',
+        #     block = False)
         mpf.plot(df, 
             **kwargs, 
             style=s, 
