@@ -22,9 +22,17 @@ class StockReport:
         super().__init__()
         self.token = '5e67f5dc948cd6e6b616ed0265e55f0b8db58c0bfb951272e7e2e50f'
         self.headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"}
-        self.startdate = '2014-01-01'
-        self.enddate = time.strftime("%Y%m%d", time.localtime())
+        # self.startdate = '2018-01-01'
+        # self.enddate = time.strftime("%Y%m%d", time.localtime())
 
+        #180 days。
+        now=datetime.datetime.now()
+        delta=datetime.timedelta(days=180)
+        n_days=now-delta
+        
+        self.enddate = now.strftime('%Y%m%d')
+        self.startdate = n_days.strftime('%Y%m%d')
+        print (self.startdate)
         
     def get_page(self,url):
         try:
@@ -68,18 +76,18 @@ class StockReport:
         fig = plt.figure(figsize=(11,6))
         fig.suptitle('Stock Report(%s)'%t)
         #解决中文显示问题
-        plt.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
-        plt.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
+        #plt.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
+        #plt.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
         for d in dicdata:
             x.append(d[0])
             y.append(d[1])
         if heng == 0:
             plt.bar(x[0:RANGE], y[0:RANGE])
-            plt.show()
+            #plt.show()
             return 
         elif heng == 1:
             plt.barh(x[0:RANGE], y[0:RANGE])
-            plt.show()
+            #plt.show()
             return 
         else:
             return "heng的值仅为0或1！"
@@ -98,7 +106,7 @@ class StockReport:
             dict[s] = dict.get(s, 0) + 1
 
         dicdata = sorted(dict.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
-        self.draw_report_from_dict(dicdata,20)
+        self.draw_report_from_dict(dicdata,10)
         print(dicdata)
         return dicdata
 
@@ -106,6 +114,7 @@ class StockReport:
         ts.set_token(self.token)
         pro = ts.pro_api()
         out = pro.daily(ts_code=stock_code, start_date = self.startdate, end_date = self.enddate)
+        #out = ts.pro_bar(ts_code =stock_code, start_date = self.startdate, end_date = self.enddate, adj='qfq') #需要权限
         daily_data = out.sort_values(by=['trade_date'])
         daily_data.reset_index(level=0,inplace=True)
         daily_data.drop(['index'],axis=1,inplace=True)
@@ -157,10 +166,10 @@ class StockReport:
             pass
         return stock_code
 
-    def draw_k_line(self,stock_code):
+    def draw_k_line(self,stock_str):
         # 导入数据
-        symbol = self.parse_stock_code(stock_code)
-        period = 5000
+        symbol = self.parse_stock_code(stock_str)
+        period = 500
         #df = self.import_csv(symbol)[-period:]
         df = self.import_ts_data(symbol)[-period:]
         # 设置基本参数
@@ -177,12 +186,12 @@ class StockReport:
             type='candle', 
             mav=(7, 30, 60), 
             volume=True, 
-            title='\nA_stock %s candle_line' % (stock_code),    
+            title='\nA_stock %s candle_line' % (stock_str),    
             ylabel='OHLC Candles', 
             ylabel_lower='Shares\nTraded Volume', 
             figratio=(15, 10), 
-            figscale=1.2)
-
+            figscale=1.1)
+        
         # 设置marketcolors
         # up:设置K线线柱颜色，up意为收盘价大于等于开盘价
         # down:与up相反，这样设置与国内K线颜色标准相符
@@ -215,11 +224,10 @@ class StockReport:
             color=['dodgerblue', 'deeppink', 
             'navy', 'teal', 'maroon', 'darkorange', 
             'indigo'])
-        mpl.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
-        mpl.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
+        
         # 设置线宽
         mpl.rcParams['lines.linewidth'] = .5
-
+     
         # 图形绘制
         # show_nontrading:是否显示非交易日，默认False
         # savefig:导出图片，填写文件名及后缀
@@ -232,17 +240,36 @@ class StockReport:
         mpf.plot(df, 
             **kwargs, 
             style=s, 
-            show_nontrading=False)       
+            show_nontrading=False,
+            block = False)       
         #plt.show()
 
+    def run(self):
+        stock_code = '上汽集团(600104)'
+        dicdata = self.show_stock_report()
 
-stockReport = StockReport()
-stock_code = '600104.SH'
-dicdata = stockReport.show_stock_report()
+        for i in range(0,10):
+            #stock_tup = dicdata[0]
+            stock_code = dicdata[i][0]
+            self.draw_k_line(stock_code)
 
-stock_tup = dicdata[0]
-stock_code = stock_tup[0]
-stockReport.draw_k_line(stock_code)
+        plt.rcParams['font.sans-serif'] = ['SimKai', 'KaiTi']
+        plt.show()
+       
+stockReport = StockReport() 
+stockReport.run()
+
+# stockReport = StockReport()
+# stock_code = '上汽集团(600104)'
+# dicdata = stockReport.show_stock_report()
+
+# for i in range(0,10):
+#     #stock_tup = dicdata[0]
+#     stock_code = dicdata[i][0]
+#     stockReport.draw_k_line(stock_code)
+
+# plt.rcParams['font.sans-serif'] = ['SimKai', 'KaiTi']
+# plt.show()
 
 
 
