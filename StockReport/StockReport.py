@@ -17,7 +17,7 @@ import tushare as ts
 
 
 class StockReport:
-    def __init__(self,range=10):
+    def __init__(self,range=10,showline=True):
         super().__init__()
         self.token = '5e67f5dc948cd6e6b616ed0265e55f0b8db58c0bfb951272e7e2e50f'
         self.headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"}
@@ -30,6 +30,7 @@ class StockReport:
         n_days=now-delta      
         self.enddate = now.strftime('%Y%m%d')
         self.startdate = n_days.strftime('%Y%m%d')
+        self.showLine = showline
         #print (self.startdate)
         
     def get_page(self,url):
@@ -90,7 +91,7 @@ class StockReport:
         else:
             return "heng的值仅为0或1！"
 
-    def show_stock_report(self):
+    def show_stock_report(self,Range):
         stock_list = []
         for i in range(1,10):
             stock_url = r'http://vis.10jqka.com.cn/free/ybzx/index/ctime/-3/pageNum/589/curPage/%d'%i
@@ -104,7 +105,8 @@ class StockReport:
             dict[s] = dict.get(s, 0) + 1
 
         dicdata = sorted(dict.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
-        self.draw_report_from_dict(dicdata,self.stockRange)
+        print(dicdata)
+        self.draw_report_from_dict(dicdata,Range)
         #print(dicdata)
         return dicdata
 
@@ -244,20 +246,23 @@ class StockReport:
         #plt.show()
 
     def run(self):
-        stock_code = '上汽集团(600104)'
-        dicdata = self.show_stock_report()
-
-        for i in range(0,self.stockRange):
-            #stock_tup = dicdata[0]
-            stock_code = dicdata[i][0]
-            self.draw_k_line(stock_code)
+        stock_code = '保利地产(600048)'
+        self.draw_k_line(stock_code)
+        dicdata = self.show_stock_report(self.stockRange)
+        if self.showLine == True:
+            for i in range(0,self.stockRange):
+                #stock_tup = dicdata[0]
+                stock_code = dicdata[i][0]
+                self.draw_k_line(stock_code)
 
         plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
         plt.show()
 
 if __name__ == "__main__":
     pass
-    stockReport = StockReport(10) 
+    stock_range = 15
+    show_line = True
+    stockReport = StockReport(stock_range,show_line) 
     stockReport.run()
 
 
