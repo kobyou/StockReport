@@ -67,82 +67,94 @@ class StockReport(object):
         #RANGE：截取显示的字典的长度。
         #heng=0，代表条状图的柱子是竖直向上的。heng=1，代表柱子是横向的。考虑到文字是从左到右的，让柱子横向排列更容易观察坐标轴。
         #by_value = sorted(dicdata.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
-        x = []
-        y = []
-        ct = time.time()
-        local_time = time.localtime(ct)
-        t = time.strftime("%Y-%m-%d", local_time)
-        fig = plt.figure(figsize=(10,5))
-        fig.suptitle('Stock Report(%s)'%t)
-        #解决中文显示问题
-        #plt.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
-        #plt.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
-        for d in dicdata:
-            x.append(d[0])
-            y.append(d[1])
-        if heng == 0:
-            plt.bar(x[0:RANGE], y[0:RANGE])
-            plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
-            plt.savefig('./report/Stock Report(%s).jpg'%t)
-            #plt.show()
-            return 
-        elif heng == 1:
-            plt.barh(x[0:RANGE], y[0:RANGE])
-            plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
-            plt.savefig('./report/Stock Report(%s).jpg'%t)
-            #plt.show()
-            return 
-        else:
-            return "heng的值仅为0或1！"
+        try:
+            x = []
+            y = []
+            ct = time.time()
+            local_time = time.localtime(ct)
+            t = time.strftime("%Y-%m-%d", local_time)
+            fig = plt.figure(figsize=(10,5))
+            fig.suptitle('Stock Report(%s)'%t)
+            #解决中文显示问题
+            #plt.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
+            #plt.rcParams['axes.unicode_minus'] = False # 解决保存图像是负号'-'显示为方块的问题
+            for d in dicdata:
+                x.append(d[0])
+                y.append(d[1])
+            if heng == 0:
+                plt.bar(x[0:RANGE], y[0:RANGE])
+                plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
+                plt.savefig('./report/Stock Report(%s).jpg'%t)
+                #plt.show()
+                return 
+            elif heng == 1:
+                plt.barh(x[0:RANGE], y[0:RANGE])
+                plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
+                plt.savefig('./report/Stock Report(%s).jpg'%t)
+                #plt.show()
+                return 
+            else:
+                return "heng的值仅为0或1！"
+        except Exception as e:
+            print(e)
 
     def show_stock_report(self,Range):
-        stock_list = []
-        for i in range(1,10):
-            stock_url = r'http://vis.10jqka.com.cn/free/ybzx/index/ctime/-3/pageNum/589/curPage/%d'%i
+        try:
+            stock_list = []
+            for i in range(1,10):
+                stock_url = r'http://vis.10jqka.com.cn/free/ybzx/index/ctime/-3/pageNum/589/curPage/%d'%i
 
-            list = []
-            list=self.get_stock_report_list(stock_url)
-            stock_list.extend(list)
+                list = []
+                list=self.get_stock_report_list(stock_url)
+                stock_list.extend(list)
 
-        dict = {}
-        for s in stock_list:
-            dict[s] = dict.get(s, 0) + 1
+            dict = {}
+            for s in stock_list:
+                dict[s] = dict.get(s, 0) + 1
 
-        dicdata = sorted(dict.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
-        print(dicdata)
-        self.draw_report_from_dict(dicdata,Range)
-        #print(dicdata)
-        return dicdata
+            dicdata = sorted(dict.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
+            print(dicdata)
+            self.draw_report_from_dict(dicdata,Range)
+            #print(dicdata)
+            return dicdata
+        except Exception as e:
+            print(e)
 
     def get_daily_data(self,stock_code):
-        ts.set_token(self.token)
-        pro = ts.pro_api()
-        #out = pro.daily(ts_code=stock_code, start_date = self.startdate, end_date = self.enddate)
-        out = ts.pro_bar(ts_code =stock_code, start_date = self.startdate, end_date = self.enddate, adj='qfq') #需要权限
-        daily_data = out.sort_values(by=['trade_date'])
-        daily_data.reset_index(level=0,inplace=True)
-        daily_data.drop(['index'],axis=1,inplace=True)
-        #print(daily_data)
-        return daily_data
-    
+        try:
+            ts.set_token(self.token)
+            pro = ts.pro_api()
+            #out = pro.daily(ts_code=stock_code, start_date = self.startdate, end_date = self.enddate)
+            out = ts.pro_bar(ts_code =stock_code, start_date = self.startdate, end_date = self.enddate, adj='qfq') #需要权限
+            daily_data = out.sort_values(by=['trade_date'])
+            daily_data.reset_index(level=0,inplace=True)
+            daily_data.drop(['index'],axis=1,inplace=True)
+            #print(daily_data)
+            return daily_data
+        except Exception as e:
+            print(e)
+
     def import_ts_data(self,stock_code):
-        ts_data = self.get_daily_data(stock_code)
-            
-        pd.set_option('display.max_rows', None)
-        df=pd.DataFrame(data=ts_data)   
-        # 格式化列名，用于之后的绘制
-        df.rename(
-                columns={
-                'trade_date': 'Date', 'open': 'Open', 
-                'high': 'High', 'low': 'Low', 
-                'close': 'Close', 'vol': 'Volume'}, 
-                inplace=True)
-        # 转换为日期格式
-        df['Date'] = pd.to_datetime(df['Date'])
-        # 将日期列作为行索引
-        df.set_index(['Date'], inplace=True)
-        #print(df)
-        return df
+        try:
+            ts_data = self.get_daily_data(stock_code)
+                
+            pd.set_option('display.max_rows', None)
+            df=pd.DataFrame(data=ts_data)   
+            # 格式化列名，用于之后的绘制
+            df.rename(
+                    columns={
+                    'trade_date': 'Date', 'open': 'Open', 
+                    'high': 'High', 'low': 'Low', 
+                    'close': 'Close', 'vol': 'Volume'}, 
+                    inplace=True)
+            # 转换为日期格式
+            df['Date'] = pd.to_datetime(df['Date'])
+            # 将日期列作为行索引
+            df.set_index(['Date'], inplace=True)
+            #print(df)
+            return df
+        except Exception as e:
+            print(e)
     
     def import_csv(self,stock_code):
         # 导入股票数据      
