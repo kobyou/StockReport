@@ -16,7 +16,7 @@ import pandas as pd# 导入DataFrame数据
 import tushare as ts
 
 
-class StockReport:
+class StockReport(object):
     def __init__(self,range=10,showline=True):
         super().__init__()
         self.token = '5e67f5dc948cd6e6b616ed0265e55f0b8db58c0bfb951272e7e2e50f'
@@ -82,10 +82,14 @@ class StockReport:
             y.append(d[1])
         if heng == 0:
             plt.bar(x[0:RANGE], y[0:RANGE])
+            plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
+            plt.savefig('./report/Stock Report(%s).jpg'%t)
             #plt.show()
             return 
         elif heng == 1:
             plt.barh(x[0:RANGE], y[0:RANGE])
+            plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
+            plt.savefig('./report/Stock Report(%s).jpg'%t)
             #plt.show()
             return 
         else:
@@ -113,8 +117,8 @@ class StockReport:
     def get_daily_data(self,stock_code):
         ts.set_token(self.token)
         pro = ts.pro_api()
-        out = pro.daily(ts_code=stock_code, start_date = self.startdate, end_date = self.enddate)
-        #out = ts.pro_bar(ts_code =stock_code, start_date = self.startdate, end_date = self.enddate, adj='qfq') #需要权限
+        #out = pro.daily(ts_code=stock_code, start_date = self.startdate, end_date = self.enddate)
+        out = ts.pro_bar(ts_code =stock_code, start_date = self.startdate, end_date = self.enddate, adj='qfq') #需要权限
         daily_data = out.sort_values(by=['trade_date'])
         daily_data.reset_index(level=0,inplace=True)
         daily_data.drop(['index'],axis=1,inplace=True)
@@ -242,11 +246,12 @@ class StockReport:
             **kwargs, 
             style=s, 
             show_nontrading=False,
-            block = False)       
+            block = False)
+        plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']       
         #plt.show()
 
     def run(self):
-        stock_code = '保利地产(600048)'
+        stock_code = '上汽集团(600104)'
         self.draw_k_line(stock_code)
         dicdata = self.show_stock_report(self.stockRange)
         if self.showLine == True:
@@ -254,17 +259,11 @@ class StockReport:
                 #stock_tup = dicdata[0]
                 stock_code = dicdata[i][0]
                 self.draw_k_line(stock_code)
-
-        plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
         plt.show()
 
 if __name__ == "__main__":
     pass
     stock_range = 15
-    show_line = True
+    show_line = 0
     stockReport = StockReport(stock_range,show_line) 
     stockReport.run()
-
-
-
-
