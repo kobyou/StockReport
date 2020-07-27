@@ -33,6 +33,9 @@ class StockReport(object):
         self.showLine = showline
         #print (self.startdate)
         
+        if not os.path.exists("./report"):
+            os.mkdir("./report")
+        
     def get_page(self,url):
         try:
             r=requests.get(url,headers=self.headers)
