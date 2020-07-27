@@ -262,7 +262,9 @@ class StockReport(object):
             style=s, 
             show_nontrading=False,
             block = False)
-        plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']       
+        plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']  
+        plt.savefig('./report/A_stock-%s %s_candle_line.jpg'% (symbol, period))
+        #     % (symbol, period))     
         #plt.show()
 
     def run(self):
