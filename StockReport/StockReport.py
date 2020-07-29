@@ -280,7 +280,7 @@ class StockReport(object):
 
 if __name__ == "__main__":
     pass
-    stock_range = 15
+    stock_range = 20
     show_line = 0
     stockReport = StockReport(stock_range,show_line) 
     stockReport.run()
