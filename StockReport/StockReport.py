@@ -28,8 +28,8 @@ class StockReport(object):
         now=datetime.datetime.now()
         delta=datetime.timedelta(days=360)
         n_days=now-delta      
-        self.enddate = now.strftime('%Y%m%d')
-        self.startdate = n_days.strftime('%Y%m%d')
+        self.enddate = now.strftime('%Y-%m-%d')
+        self.startdate = n_days.strftime('%Y-%m-%d')
         self.showLine = showline
         #print (self.startdate)
 
@@ -269,25 +269,62 @@ class StockReport(object):
             print(e)
         #     % (symbol, period))     
         #plt.show()
+    def get_top_list(self):
+        #print(ts.get_day_all())
+        for i in range(0,10):
+            now=datetime.datetime.now()
+            delta=datetime.timedelta(days=i)
+            n_days=now-delta      
+            tradedate = n_days.strftime('%Y-%m-%d')
 
-    def run(self):
+            ts_data = ts.top_list(tradedate)
+            if not  ts_data  is None:
+                break
+        
+        df=pd.DataFrame(data=ts_data) 
+        print(df)
+        return df
+
+    def run(self,mode):
         try:
-            stock_code = '上汽集团(600104)'
-            self.draw_k_line(stock_code)
-            dicdata = self.show_stock_report(self.stockRange)
-            if self.showLine == True:
-                for i in range(0,self.stockRange):
-                    #stock_tup = dicdata[0]
-                    stock_code = dicdata[i][0]
+            if mode:
+                # stock_code = '英特集团(000411)'
+                # self.draw_k_line(stock_code)
+                df = self.get_top_list()
+                lst = []
+                top_list = []
+                for n in range(0,100):
+                    if not (df['name'][n].find("ST") == -1):
+                        continue
+                    #stock_code = '%s(%s)'%(df['name'][n],df['code'][n])
+                    stock_code = (df['name'][n],df['code'][n])
+                    lst.append(stock_code)
+                    top_list = list(set(lst))
+                    if len(top_list) >= 10:
+                        break
+                #print(lst)
+                print(top_list)
+
+                for n in range(0,len(top_list)):
+                    stock_code= "%s(%s)"%(top_list[n][0],top_list[n][1])
                     self.draw_k_line(stock_code)
-            plt.show()
+            else:
+                dicdata = self.show_stock_report(self.stockRange)
+                if self.showLine == True:
+                    for i in range(0,self.stockRange):
+                        #stock_tup = dicdata[0]
+                        stock_code = dicdata[i][0]
+                        self.draw_k_line(stock_code)
+                plt.show()
         except Exception as e:
             print(e)
  
 if __name__ == "__main__":
     pass
-    stock_range = 20
+    stock_range = 15
     show_line = 1
+    mode = 0
+
     stockReport = StockReport(stock_range,show_line) 
-    stockReport.run()
+    stockReport.run(mode)
     
