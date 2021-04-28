@@ -14,7 +14,12 @@ import matplotlib as mpl# 用于设置曲线参数
 from cycler import cycler# 用于定制线条颜色
 import pandas as pd# 导入DataFrame数据
 import tushare as ts
-
+from MyQR import myqr  #注意大小写
+import smtplib
+from email.header import Header
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 
 class StockReport(object):
     def __init__(self,range=10,showline=True):
@@ -31,6 +36,7 @@ class StockReport(object):
         self.enddate = now.strftime('%Y-%m-%d')
         self.startdate = n_days.strftime('%Y-%m-%d')
         self.showLine = showline
+        self.reportFile=''
         #print (self.startdate)
 
         if not os.path.exists("./report"):
@@ -93,7 +99,8 @@ class StockReport(object):
             elif heng == 1:
                 plt.barh(x[0:RANGE], y[0:RANGE])
                 plt.rcParams['font.sans-serif'] = ['FangSong', 'KaiTi']
-                plt.savefig('./report/Stock Report(%s).jpg'%t)
+                self.reportFile="./report/Stock_Report(%s).jpg"%t
+                plt.savefig(self.reportFile)
                 #plt.show()
                 return 
             else:
@@ -101,7 +108,7 @@ class StockReport(object):
         except Exception as e:
             print(e)
 
-    def show_stock_report(self,Range):
+    def show_stock_report(self):
         try:
             stock_list = []
             for i in range(1,10):
@@ -117,7 +124,7 @@ class StockReport(object):
 
             dicdata = sorted(dict.items(), key = lambda kv:(kv[1], kv[0]), reverse = True) 
             print(dicdata)
-            self.draw_report_from_dict(dicdata,Range)
+            self.draw_report_from_dict(dicdata,self.stockRange)
             #print(dicdata)
             return dicdata
         except Exception as e:
@@ -309,7 +316,7 @@ class StockReport(object):
                     stock_code= "%s(%s)"%(top_list[n][0],top_list[n][1])
                     self.draw_k_line(stock_code)
             else:
-                dicdata = self.show_stock_report(self.stockRange)
+                dicdata = self.show_stock_report()
                 if self.showLine == True:
                     for i in range(0,self.stockRange):
                         #stock_tup = dicdata[0]
@@ -318,13 +325,80 @@ class StockReport(object):
                 plt.show()
         except Exception as e:
             print(e)
+            
+    def send_email_by_qq(self,to):
+        pass
+        sender_mail='7977200@qq.com' # 发送方的邮箱地址
+        sender_pass = 'alximfjckljjbgba' # 邮箱提供的授权码，可在第三方登录。
+        sftp_obj =smtplib.SMTP('smtp.qq.com', 25)
+        sftp_obj.login(sender_mail, sender_pass)
+        #三个参数分别是：发件人邮箱账号，收件人邮箱账号，发送的邮件体
+        
+        # 设置总的邮件体对象，对象类型为mixed
+        msg_root = MIMEMultipart('mixed')
+        # 邮件添加的头尾信息等
+        msg_root['From'] = '7977200@qq.com<7977200@qq.com>'
+        #msg_root['To'] = to
+        msg_root['To'] = ",".join(to)
+        subject = 'Please check stock report'
+        msg_root['subject'] = Header(subject, 'utf-8')
+
+        # 构造文本内容
+        text_info = 'Stock report of %s'%self.reportFile
+        text_sub = MIMEText(text_info, 'plain', 'utf-8')
+        msg_root.attach(text_sub)
+
+        # 构造超文本
+        # url = "https://blog.csdn.net/chinesepython"
+        # html_info = """
+        # <p>点击以下链接，你会去向一个更大的世界</p>
+        # <p><a href="%s">click me</a></p>
+        # <p>i am very galsses for you</p>
+        # """% url
+        # html_sub = MIMEText(html_info, 'html', 'utf-8')
+        # # 如果不加下边这行代码的话，上边的文本是不会正常显示的，会把超文本的内容当做文本显示
+        # html_sub["Content-Disposition"] = 'attachment; filename="csdn.html"'   
+        # # 把构造的内容写到邮件体中
+        # msg_root.attach(html_sub)
+
+        # 构造图片
+        image_file = open(self.reportFile, 'rb').read()
+        image = MIMEImage(image_file)
+        image.add_header('Content-ID', '<image1>')
+        # 如果不加下边这行代码的话，会在收件方方面显示乱码的bin文件，下载之后也不能正常打开
+        image["Content-Disposition"] = 'attachment; filename="red_people.jpg"'
+        msg_root.attach(image)
+
+        # 构造附件
+        # txt_file = open(r'C:\StockReport\report\test.txt', 'rb').read()
+        # txt = MIMEText(txt_file, 'base64', 'utf-8')
+        # txt["Content-Type"] = 'application/octet-stream'
+        # #以下代码可以重命名附件为hello_world.txt  
+        # txt.add_header('Content-Disposition', 'attachment', filename='test.txt')
+        # msg_root.attach(txt)
+
+        try:
+            sftp_obj =smtplib.SMTP('smtp.qq.com', 25)
+            sftp_obj.login(sender_mail, sender_pass)
+            sftp_obj.sendmail(sender_mail, to, msg_root.as_string())
+            sftp_obj.quit()
+            print('sendemail successful!')
+
+        except Exception as e:
+            print('sendemail failed next is the reason')
+            print(e)
+
  
 if __name__ == "__main__":
     pass
     stock_range = 15
-    show_line = 1
+    show_line = 0
     mode = 0
 
     stockReport = StockReport(stock_range,show_line) 
     stockReport.run(mode)
-    
+    #myqr.run(words="http://www.baidu.com")
+
+    #email receiver list
+    to = ['kobyou@126.com','7977200@qq.com']
+    stockReport.send_email_by_qq(to)
